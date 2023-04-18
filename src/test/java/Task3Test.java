@@ -1,23 +1,20 @@
-import java.util.PriorityQueue;
+import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import org.junit.jupiter.api.Test;
 
-//todo wait, notify
 public class Task3Test {
 
-    Queue<String> queue = new PriorityQueue<>();
+    private volatile Queue<String> queue = new ArrayDeque<>();
 
     @Test
     void test() {
         Runnable producer = () -> {
             for (var i = 1; ; i++) {
-                synchronized (queue) {
-                    var value = Thread.currentThread().getName() + "    " + i;
-                    queue.add(value);
-                    System.out.println("Add " + value);
-                }
+                var value = Thread.currentThread().getId() + "-" + i;
+                queue.add(value);
+
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
@@ -28,9 +25,12 @@ public class Task3Test {
 
         Runnable consumer = () -> {
             while (true) {
-                synchronized (queue) {
-                    System.out.println("Pool " + queue.poll());
+                if (queue.size() > 0) {
+                    var result = queue.poll();
+                    System.out.println("Pool " + result);
+                    System.out.println("Queue " + queue.toString());
                 }
+
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
@@ -40,15 +40,10 @@ public class Task3Test {
         };
 
         Executor executor = Executors.newFixedThreadPool(10);
-        for (
-            var i = 0;
-            i < 5; i++) {
+        for (var i = 0; i < 5; i++) {
             executor.execute(producer);
         }
-
-        for (
-            var i = 0;
-            i < 1; i++) {
+        for (var i = 0; i < 2; i++) {
             executor.execute(consumer);
         }
 
