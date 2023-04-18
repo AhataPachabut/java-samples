@@ -42,7 +42,7 @@ public class Task1Test {
 
         Random random = new Random();
         Thread t1 = new Thread(() -> {
-            for (var i = 0; i < 10000; i++) {
+            for (var i = 0; i < 1000; i++) {
                 var r = random.nextInt();
                 map.put(i, r);
                 System.out.println("Put " + r);

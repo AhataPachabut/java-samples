@@ -1,19 +1,23 @@
 package com.epam;
 
-// Press Shift twice to open the Search Everywhere dialog and type `show whitespaces`,
-// then press Enter. You can now see whitespace characters in your code.
+import com.epam.model.Currency;
+import com.epam.model.User;
+import com.epam.model.UserAccount;
+import com.epam.service.ExchangeService;
+import com.epam.service.UserAccountService;
+
 public class Main {
-    public static void main(String[] args) {
-        // Press Alt+Enter with your caret at the highlighted text to see how
-        // IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
+    public static void main(String[] args) throws Exception {
+        ExchangeService.loadRates();
 
-        // Press Shift+F10 or click the green arrow button in the gutter to run the code.
-        for (int i = 1; i <= 5; i++) {
+        var exchangeService = new ExchangeService();
+        var userAccountService = new UserAccountService();
 
-            // Press Shift+F9 to start debugging your code. We have set one breakpoint
-            // for you, but you can always add more by pressing Ctrl+F8.
-            System.out.println("i = " + i);
-        }
+        User user1 = new User("Mark");
+        UserAccount account1 = userAccountService.getUserAccount(user1);
+
+        var value = exchangeService.exchange(Currency.USD, Currency.EUR, account1.amountOfMoney().get(Currency.USD));
+        account1.amountOfMoney().put(Currency.EUR, value);
+        userAccountService.updateUserAccount(account1);
     }
 }
