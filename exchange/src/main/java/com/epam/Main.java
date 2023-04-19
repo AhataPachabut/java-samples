@@ -5,19 +5,33 @@ import com.epam.model.User;
 import com.epam.model.UserAccount;
 import com.epam.service.ExchangeService;
 import com.epam.service.UserAccountService;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class Main {
+
+    private static UserAccountService userAccountService = new UserAccountService();
+    private static ExchangeService exchangeService = new ExchangeService(userAccountService);
+
     public static void main(String[] args) throws Exception {
         ExchangeService.loadRates();
 
-        var exchangeService = new ExchangeService();
-        var userAccountService = new UserAccountService();
+        Executor executor = Executors.newFixedThreadPool(10);
+        Runnable task = () -> {
+            User user = new User("Mark");
+            try {
+                UserAccount userAccount = userAccountService.getUserAccount(user);
+                exchangeService.exchange(userAccount, Currency.USD, Currency.EUR, 500.0);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
+        for (var i = 0; i < 2; i++) {
+            executor.execute(task);
+        }
 
-        User user1 = new User("Mark");
-        UserAccount account1 = userAccountService.getUserAccount(user1);
-
-        var value = exchangeService.exchange(Currency.USD, Currency.EUR, account1.amountOfMoney().get(Currency.USD));
-        account1.amountOfMoney().put(Currency.EUR, value);
-        userAccountService.updateUserAccount(account1);
+//        UserAccountService.saveUserAccounts();
     }
+
+
 }
