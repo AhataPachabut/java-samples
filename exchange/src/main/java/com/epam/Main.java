@@ -21,15 +21,29 @@ public class Main {
             User user = new User("Mark");
             try {
                 UserAccount userAccount = userAccountService.getUserAccount(user);
-                exchangeService.exchange(userAccount, Currency.USD, Currency.EUR, 500.0);
+                exchangeService.exchange(userAccount, Currency.USD, Currency.EUR, 50.0);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         };
+
+        Runnable task1 = () -> {
+            User user = new User("Mark");
+            try {
+                UserAccount userAccount = userAccountService.getUserAccount(user);
+                userAccountService.plusSum(userAccount, Currency.USD, 1000.0);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
+
         for (var i = 0; i < 2; i++) {
             executor.execute(task);
+//            executor.execute(task1);
         }
 
+        Thread.currentThread().join();
+        System.exit(1);
 //        UserAccountService.saveUserAccounts();
     }
 

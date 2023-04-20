@@ -23,16 +23,19 @@ public class ExchangeService {
         this.userAccountService = userAccountService;
     }
 
-    public void exchange(UserAccount userAccount, Currency from, Currency to, double amountOfMoney) throws Exception {
-        var amountOfMoneyBefore = userAccountService.getSum(userAccount, from);
-        if (amountOfMoneyBefore >= amountOfMoney) {
-            var amountOfMoneyAfter = exchange(Currency.USD, Currency.EUR, amountOfMoney);
-            userAccountService.setSum(userAccount, from, amountOfMoneyBefore - amountOfMoney);
-            userAccountService.setSum(userAccount, to, userAccountService.getSum(userAccount, to) + amountOfMoneyAfter);
-            System.out.println(userAccount);
+    //synchronized because it is atomic operation. moreover other threads should not update userAccount at the same time.
+    public synchronized void exchange(UserAccount userAccount, Currency from, Currency to, double amountOfMoneyFrom) throws Exception {
+        //I need to acquire userAccount here
+        var amountOfMoneyFromBefore = userAccountService.getSum(userAccount, from);
+        if (amountOfMoneyFromBefore >= amountOfMoneyFrom) {
+            var amountOfMoneyToAfter = exchange(Currency.USD, Currency.EUR, amountOfMoneyFrom);
+            userAccountService.setSum(userAccount, from, amountOfMoneyFromBefore - amountOfMoneyFrom);
+            userAccountService.setSum(userAccount, to, userAccountService.getSum(userAccount, to) + amountOfMoneyToAfter);
         } else {
             throw new Exception("Unable to exchange because not enough money");
         }
+        //I need to release userAccount here
+        Thread.sleep(2000);//this is to see that one thread executes after another
     }
 
     private double exchange(Currency from, Currency to, double amountOfMoney) throws Exception {
