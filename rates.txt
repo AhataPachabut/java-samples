@@ -1,0 +1,1 @@
+[{"currencyFrom":"USD","currencyTo":"EUR","rate":0.8},{"currencyFrom":"EUR","currencyTo":"USD","rate":1.2}]
