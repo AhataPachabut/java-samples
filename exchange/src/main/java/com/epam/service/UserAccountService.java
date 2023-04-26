@@ -16,7 +16,7 @@ public class UserAccountService {
 
     private static final Collection<UserAccount> userAccounts = new HashSet<>();
 
-    public static void saveUserAccounts() {
+    public void saveUserAccounts() {
         userAccounts.parallelStream().forEach(userUserAccountEntry -> {
             try {
                 IOUtils.writeToFile(
@@ -54,28 +54,16 @@ public class UserAccountService {
         }).get();
     }
 
-    public synchronized Double getSum(UserAccount userAccount, Currency currency) {
+    public Double getSum(UserAccount userAccount, Currency currency) {
         return userAccount.amountOfMoney().getOrDefault(currency, 0.0);
     }
 
     //other threads should not update userAccount at the same time.
-    public synchronized void setSum(UserAccount userAccount, Currency currency, Double sum) {
-        userAccounts.add(userAccount);
-        userAccount.amountOfMoney().put(currency, sum);
-        System.out.println(Thread.currentThread().getId() + " " + userAccount);
-    }
-
-    //this should be atomic operation
-    public synchronized void plusSum(UserAccount userAccount, Currency currency, Double sum) {
-        userAccounts.add(userAccount);
-        userAccount.amountOfMoney().put(currency, userAccount.amountOfMoney().get(currency) + sum);
-        System.out.println(Thread.currentThread().getId() + " " + userAccount);
-    }
-
-    //this should be atomic operation
-    public synchronized void minusSum(UserAccount userAccount, Currency currency, Double sum) {
-        userAccounts.add(userAccount);
-        userAccount.amountOfMoney().put(currency, userAccount.amountOfMoney().get(currency) - sum);
-        System.out.println(Thread.currentThread().getId() + " " + userAccount);
+    public void setSum(UserAccount userAccount, Currency currency, Double sum) {
+        synchronized (userAccount) {
+            userAccounts.add(userAccount);
+            userAccount.amountOfMoney().put(currency, sum);
+            System.out.println(Thread.currentThread().getId() + " " + userAccount);
+        }
     }
 }

@@ -11,40 +11,54 @@ import java.util.concurrent.Executors;
 public class Main {
 
     private static UserAccountService userAccountService = new UserAccountService();
-    private static ExchangeService exchangeService = new ExchangeService(userAccountService);
+    private static final ExchangeService exchangeService = new ExchangeService(userAccountService);
 
     public static void main(String[] args) throws Exception {
-        ExchangeService.loadRates();
+        exchangeService.loadRates();
+
+        User user1 = new User("Mark");
+        User user2 = new User("Ann");
 
         Executor executor = Executors.newFixedThreadPool(10);
-        Runnable task = () -> {
-            User user = new User("Mark");
+        Runnable task1 = () -> {
             try {
-                UserAccount userAccount = userAccountService.getUserAccount(user);
+                UserAccount userAccount = userAccountService.getUserAccount(user1);
+                exchangeService.exchange(userAccount, Currency.USD, Currency.EUR, 50.0);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        };
+        Runnable task2 = () -> {
+            try {
+                UserAccount userAccount = userAccountService.getUserAccount(user2);
                 exchangeService.exchange(userAccount, Currency.USD, Currency.EUR, 50.0);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         };
 
-        Runnable task1 = () -> {
-            User user = new User("Mark");
-            try {
-                UserAccount userAccount = userAccountService.getUserAccount(user);
-                userAccountService.plusSum(userAccount, Currency.USD, 1000.0);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        };
-
         for (var i = 0; i < 2; i++) {
-            executor.execute(task);
-//            executor.execute(task1);
+            executor.execute(task1);
+            executor.execute(task2);
+            executor.execute(() -> {
+                try {
+                    UserAccount userAccount = userAccountService.getUserAccount(user1);
+                    userAccountService.setSum(userAccount, Currency.EUR, 1000.0);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            executor.execute(() -> {
+                try {
+                    UserAccount userAccount = userAccountService.getUserAccount(user1);
+                    userAccountService.setSum(userAccount, Currency.USD, 1000.0);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
         }
 
-        Thread.currentThread().join();
-        System.exit(1);
-//        UserAccountService.saveUserAccounts();
+//        userAccountService.saveUserAccounts();
     }
 
 
